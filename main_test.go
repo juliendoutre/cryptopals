@@ -3,10 +3,9 @@ package cryptopals_test
 import (
 	"bufio"
 	"bytes"
+	_ "embed"
 	"encoding/hex"
 	"testing"
-
-	_ "embed"
 
 	"github.com/juliendoutre/cryptopals"
 	"github.com/stretchr/testify/assert"
@@ -16,6 +15,7 @@ import (
 //go:embed data/4.txt
 var data string
 
+// https://cryptopals.com/sets/1
 func TestSet1(t *testing.T) {
 	t.Parallel()
 
@@ -23,7 +23,7 @@ func TestSet1(t *testing.T) {
 	t.Run("challenge 1", func(t *testing.T) {
 		t.Parallel()
 
-		actual, err := cryptopals.HexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")
+		actual, err := cryptopals.HexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d") //nolint:lll
 		require.NoError(t, err)
 
 		assert.Equal(t, "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t", actual)
@@ -33,7 +33,7 @@ func TestSet1(t *testing.T) {
 	t.Run("challenge 2", func(t *testing.T) {
 		t.Parallel()
 
-		a, err := hex.DecodeString("1c0111001f010100061a024b53535009181c")
+		a, err := hex.DecodeString("1c0111001f010100061a024b53535009181c") //nolint:varnamelen
 		require.NoError(t, err)
 
 		b, err := hex.DecodeString("686974207468652062756c6c277320657965")

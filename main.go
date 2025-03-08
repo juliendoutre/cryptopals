@@ -3,6 +3,7 @@ package cryptopals
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"math"
 	"unicode"
 )
@@ -10,7 +11,7 @@ import (
 func HexToBase64(input string) (string, error) {
 	raw, err := hex.DecodeString(input)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decoding hex string: %w", err)
 	}
 
 	return base64.StdEncoding.EncodeToString(raw), nil
