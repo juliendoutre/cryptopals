@@ -58,3 +58,13 @@ func CrackSingleCharXor(ciphertext []byte) (byte, string, bool) {
 
 	return 0, "", false
 }
+
+func RepeatingKeyXor(plaintext, key []byte) []byte {
+	ciphertext := make([]byte, len(plaintext))
+
+	for index := range plaintext {
+		ciphertext[index] = plaintext[index] ^ key[index%len(key)]
+	}
+
+	return ciphertext
+}
