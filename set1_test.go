@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
+	"encoding/base64"
 	"encoding/hex"
 	"testing"
 
@@ -13,7 +14,10 @@ import (
 )
 
 //go:embed data/4.txt
-var data string
+var data4 string
+
+//go:embed data/6.txt
+var data6 string
 
 // https://cryptopals.com/sets/1
 //
@@ -51,24 +55,24 @@ func TestSet1(t *testing.T) {
 		ciphertext, err := hex.DecodeString("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
 		require.NoError(t, err)
 
-		_, plaintext, isCracked := cryptopals.CrackSingleCharXor(ciphertext)
+		_, plaintext, isCracked := cryptopals.SingleByteXor.Crack(ciphertext)
 		assert.True(t, isCracked)
-		assert.Equal(t, "Cooking MC's like a pound of bacon", plaintext)
+		assert.Equal(t, "Cooking MC's like a pound of bacon", string(plaintext))
 	})
 
 	// https://cryptopals.com/sets/1/challenges/4
 	t.Run("challenge 4", func(t *testing.T) {
 		t.Parallel()
 
-		scanner := bufio.NewScanner(bytes.NewBufferString(data))
+		scanner := bufio.NewScanner(bytes.NewBufferString(data4))
 
 		for scanner.Scan() {
 			ciphertext, err := hex.DecodeString(scanner.Text())
 			require.NoError(t, err)
 
-			_, plaintext, isCracked := cryptopals.CrackSingleCharXor(ciphertext)
+			_, plaintext, isCracked := cryptopals.SingleByteXor.Crack(ciphertext)
 			if isCracked {
-				assert.Equal(t, "Now that the party is jumping\n", plaintext)
+				assert.Equal(t, "Now that the party is jumping\n", string(plaintext))
 			}
 		}
 
@@ -84,8 +88,21 @@ I go crazy when I hear a cymbal`
 		key := "ICE"
 		expectedCiphertext := "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f" //nolint:lll
 
-		ciphertext := hex.EncodeToString(cryptopals.RepeatingKeyXor([]byte(plaintext), []byte(key)))
+		ciphertext := hex.EncodeToString(cryptopals.RepeatingKeyXor.Encrypt([]byte(plaintext), []byte(key)))
 
 		assert.Equal(t, expectedCiphertext, ciphertext)
+	})
+
+	// https://cryptopals.com/sets/1/challenges/6
+	t.Run("challenge 6", func(t *testing.T) {
+		t.Parallel()
+
+		assert.Equal(t, 37, cryptopals.HammingDistance([]byte("this is a test"), []byte("wokka wokka!!!")))
+
+		ciphertext, err := base64.StdEncoding.DecodeString(data6)
+		require.NoError(t, err)
+
+		keySize := cryptopals.RepeatingKeyXor.GuessKeySize(2, 41, ciphertext)
+		assert.Equal(t, 5, keySize)
 	})
 }
