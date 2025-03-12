@@ -10,3 +10,9 @@ My solutions to https://cryptopals.com/.
 brew install golangci-lint
 golangci-lint run
 ```
+
+### Run tests
+
+```shell
+go test -v .
+```

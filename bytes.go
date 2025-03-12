@@ -25,7 +25,7 @@ func NewSingleByteBlock(a byte, length int) []byte {
 func HammingDistance(a, b []byte) int {
 	count := 0
 
-	for index := range len(a) {
+	for index := range a {
 		count += bits.OnesCount8(a[index] ^ b[index])
 	}
 

@@ -2,7 +2,13 @@ linters:
   enable-all: true
   disable:
     - tenv # Deprecated
-    - exhaustruct # Too noisy
+    # Too noisy
+    - exhaustruct
+    - mnd
+    - lll
+    - varnamelen
+    - funlen
+    - cyclop
 linters-settings:
   depguard:
     rules:
