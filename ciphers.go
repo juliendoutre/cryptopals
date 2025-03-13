@@ -68,7 +68,9 @@ func (r RepeatingKeyXor) Decrypt(ciphertext []byte) []byte {
 
 var _ Cipher = RepeatingKeyXor{}
 
-func (r RepeatingKeyXor) Crack(ciphertext []byte, keySize int) ([]byte, []byte, bool) {
+func (r RepeatingKeyXor) Crack(ciphertext []byte) ([]byte, []byte, bool) {
+	keySize := r.guessKeySize(2, 40, ciphertext)
+
 	key := make([]byte, keySize)
 
 	for i := range keySize {

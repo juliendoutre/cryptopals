@@ -75,9 +75,10 @@ func TestSet1(t *testing.T) {
 			ciphertext, err := hex.DecodeString(scanner.Text())
 			require.NoError(t, err)
 
-			_, plaintext, isCracked := cryptopals.SingleByteXor{}.Crack(ciphertext)
+			key, plaintext, isCracked := cryptopals.SingleByteXor{}.Crack(ciphertext)
 			if isCracked {
 				assert.Equal(t, "Now that the party is jumping\n", string(plaintext))
+				assert.EqualValues(t, '5', key)
 			}
 		}
 
@@ -105,9 +106,10 @@ I go crazy when I hear a cymbal`
 		ciphertext, err := base64.StdEncoding.DecodeString(data6)
 		require.NoError(t, err)
 
-		for keySize := range 40 {
-			_, _, _ = cryptopals.RepeatingKeyXor{}.Crack(ciphertext, keySize)
-		}
+		key, plaintext, isCracked := cryptopals.RepeatingKeyXor{}.Crack(ciphertext)
+		assert.True(t, isCracked)
+		assert.Equal(t, "", string(key))
+		t.Log(string(plaintext))
 	})
 
 	// https://cryptopals.com/sets/1/challenges/7
