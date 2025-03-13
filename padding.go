@@ -6,17 +6,21 @@ type Padding interface {
 }
 
 type PKCS7 struct {
-	Length int
+	Length byte
 }
 
 func (p PKCS7) Pad(text []byte) []byte {
-	remainder := len(text) % p.Length
+	if p.Length == 0 {
+		return text
+	}
+
+	remainder := len(text) % int(p.Length)
 
 	if remainder == 0 {
 		return text
 	}
 
-	suffixLength := p.Length - remainder
+	suffixLength := int(p.Length) - remainder
 
 	paddedText := text
 
@@ -28,11 +32,23 @@ func (p PKCS7) Pad(text []byte) []byte {
 }
 
 func (p PKCS7) Unpad(text []byte) []byte {
-	index := len(text)
+	if p.Length == 0 {
+		return text
+	}
 
-	// TODO
+	if len(text) < int(p.Length) {
+		return text
+	}
 
-	return text[:index]
+	paddingByte := text[len(text)-1]
+
+	for i := 1; i < int(paddingByte); i++ {
+		if text[len(text)-i] != paddingByte {
+			return text
+		}
+	}
+
+	return text[:len(text)-int(paddingByte)]
 }
 
 var _ Padding = PKCS7{}

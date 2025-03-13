@@ -105,10 +105,9 @@ I go crazy when I hear a cymbal`
 		ciphertext, err := base64.StdEncoding.DecodeString(data6)
 		require.NoError(t, err)
 
-		keySize := cryptopals.RepeatingKeyXor{}.GuessKeySize(2, 41, ciphertext)
-		assert.Equal(t, 5, keySize)
-
-		// TODO: find the key
+		for keySize := range 40 {
+			_, _, _ = cryptopals.RepeatingKeyXor{}.Crack(ciphertext, keySize)
+		}
 	})
 
 	// https://cryptopals.com/sets/1/challenges/7

@@ -15,7 +15,13 @@ type SingleByteXor struct {
 }
 
 func (s SingleByteXor) Encrypt(plaintext []byte) []byte {
-	return Xor(plaintext, NewSingleByteBlock(s.Key, len(plaintext)))
+	ciphertext := make([]byte, len(plaintext))
+
+	for index := range plaintext {
+		ciphertext[index] = plaintext[index] ^ s.Key
+	}
+
+	return ciphertext
 }
 
 func (s SingleByteXor) Decrypt(ciphertext []byte) []byte {
@@ -24,10 +30,12 @@ func (s SingleByteXor) Decrypt(ciphertext []byte) []byte {
 
 func (s SingleByteXor) Crack(ciphertext []byte) (byte, []byte, bool) {
 	for candidate := range math.MaxUint8 {
-		plaintext := Xor(ciphertext, NewSingleByteBlock(byte(candidate), len(ciphertext)))
+		s.Key = byte(candidate)
+
+		plaintext := s.Decrypt(ciphertext)
 
 		if IsEnglish(plaintext) {
-			return byte(candidate), plaintext, true
+			return s.Key, plaintext, true
 		}
 	}
 
@@ -60,25 +68,36 @@ func (r RepeatingKeyXor) Decrypt(ciphertext []byte) []byte {
 
 var _ Cipher = RepeatingKeyXor{}
 
-func (r RepeatingKeyXor) Crack(ciphertext []byte) ([]byte, []byte, bool) {
-	keySize := r.GuessKeySize(2, 41, ciphertext)
+func (r RepeatingKeyXor) Crack(ciphertext []byte, keySize int) ([]byte, []byte, bool) {
+	key := make([]byte, keySize)
 
-	transposedBlocks := make([][]byte, keySize)
-
-	for blockIndex := range keySize {
-		transposedBlocks[blockIndex] = []byte{}
-
-		for keyIndex := range len(ciphertext) / keySize {
-			index := blockIndex*keySize + keyIndex
-
-			transposedBlocks[blockIndex] = append(transposedBlocks[blockIndex], ciphertext[index])
+	for i := range keySize {
+		keyByte, _, isCracked := SingleByteXor{}.Crack(transposeBlock(ciphertext, keySize, i))
+		if !isCracked {
+			return nil, nil, false
 		}
+
+		key[i] = keyByte
 	}
 
-	return nil, nil, false
+	// TODO: return plaintext
+
+	return key, nil, true
 }
 
-func (r RepeatingKeyXor) GuessKeySize(minKeySize, maxKeySize int, ciphertext []byte) int {
+func transposeBlock(ciphertext []byte, blockSize, index int) []byte {
+	block := make([]byte, len(ciphertext)/blockSize)
+
+	for j := range len(ciphertext) / blockSize {
+		block[j] = ciphertext[blockSize*j+index]
+	}
+
+	// TODO: add final block
+
+	return block
+}
+
+func (r RepeatingKeyXor) guessKeySize(minKeySize, maxKeySize int, ciphertext []byte) int {
 	guess := minKeySize
 	guessDistance := float64(8)
 
@@ -129,18 +148,3 @@ func (a AES128ECB) Decrypt(ciphertext []byte) []byte {
 }
 
 var _ Cipher = AES128ECB{}
-
-type AESCBC struct {
-	Key []byte
-	IV  []byte
-}
-
-func (a AESCBC) Encrypt(plaintext []byte) []byte {
-	return nil
-}
-
-func (a AESCBC) Decrypt(plaintext []byte) []byte {
-	return nil
-}
-
-var _ Cipher = AESCBC{}
