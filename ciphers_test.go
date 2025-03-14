@@ -51,3 +51,19 @@ func TestAES128ECB(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestAES128CBC(t *testing.T) {
+	t.Parallel()
+
+	padding := cryptopals.PKCS7{Length: 16}
+
+	f := func(plaintext []byte, key, iv [16]byte) bool {
+		cipher := cryptopals.AES128CBC{Key: key, IV: iv}
+
+		return bytes.Equal(plaintext, padding.Unpad(cipher.Decrypt(cipher.Encrypt(padding.Pad(plaintext)))))
+	}
+
+	if err := quick.Check(f, &quick.Config{}); err != nil {
+		t.Error(err)
+	}
+}
