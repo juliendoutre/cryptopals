@@ -4,12 +4,15 @@ import (
 	"unicode"
 )
 
-func IsEnglish(input []byte) bool {
+func EnglishScore(input []byte) float64 {
+	score := .0
+
 	for _, c := range string(input) {
-		if !(unicode.IsLetter(c) || unicode.IsSpace(c) || unicode.IsDigit(c) || c == '\'') {
-			return false
+		if unicode.IsLetter(c) || unicode.IsDigit(c) || unicode.IsSpace(c) {
+			score++
 		}
 	}
 
-	return true
+	// Normalize the score
+	return score / float64(len(input))
 }

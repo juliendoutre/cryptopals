@@ -1,8 +1,6 @@
 package cryptopals_test
 
 import (
-	"bufio"
-	"bytes"
 	_ "embed"
 	"encoding/base64"
 	"encoding/hex"
@@ -50,7 +48,9 @@ func TestSet1(t *testing.T) {
 		b, err := hex.DecodeString("686974207468652062756c6c277320657965")
 		require.NoError(t, err)
 
-		assert.Equal(t, "746865206b696420646f6e277420706c6179", hex.EncodeToString(cryptopals.Xor(a, b)))
+		c := hex.EncodeToString(cryptopals.Xor(a, b))
+
+		assert.Equal(t, "746865206b696420646f6e277420706c6179", c)
 	})
 
 	// https://cryptopals.com/sets/1/challenges/3
@@ -60,8 +60,7 @@ func TestSet1(t *testing.T) {
 		ciphertext, err := hex.DecodeString("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
 		require.NoError(t, err)
 
-		_, plaintext, isCracked := cryptopals.SingleByteXor{}.Crack(ciphertext)
-		assert.True(t, isCracked)
+		plaintext := cryptopals.CrackSingleByteXor(ciphertext).Decrypt(ciphertext)
 		assert.Equal(t, "Cooking MC's like a pound of bacon", string(plaintext))
 	})
 
@@ -69,20 +68,26 @@ func TestSet1(t *testing.T) {
 	t.Run("challenge 4", func(t *testing.T) {
 		t.Parallel()
 
-		scanner := bufio.NewScanner(bytes.NewBufferString(data4))
+		bestPlaintext, bestScore := "", .0
 
-		for scanner.Scan() {
-			ciphertext, err := hex.DecodeString(scanner.Text())
+		for _, line := range strings.Split(data4, "\n") {
+			if line == "" {
+				continue
+			}
+
+			ciphertext, err := hex.DecodeString(line)
 			require.NoError(t, err)
 
-			key, plaintext, isCracked := cryptopals.SingleByteXor{}.Crack(ciphertext)
-			if isCracked {
-				assert.Equal(t, "Now that the party is jumping\n", string(plaintext))
-				assert.EqualValues(t, '5', key)
+			plaintext := cryptopals.CrackSingleByteXor(ciphertext).Decrypt(ciphertext)
+			score := cryptopals.EnglishScore(plaintext)
+
+			if score > bestScore {
+				bestPlaintext = string(plaintext)
+				bestScore = score
 			}
 		}
 
-		assert.NoError(t, scanner.Err())
+		assert.Equal(t, "Now that the party is jumping\n", bestPlaintext)
 	})
 
 	// https://cryptopals.com/sets/1/challenges/5
@@ -106,10 +111,10 @@ I go crazy when I hear a cymbal`
 		ciphertext, err := base64.StdEncoding.DecodeString(data6)
 		require.NoError(t, err)
 
-		key, plaintext, isCracked := cryptopals.RepeatingKeyXor{}.Crack(ciphertext)
-		assert.True(t, isCracked)
-		assert.Equal(t, "", string(key))
-		t.Log(string(plaintext))
+		cipher := cryptopals.CrackRepeatingKeyXor(ciphertext)
+		assert.Equal(t, "Terminator X: Bring the noise", string(cipher.Key))
+
+		t.Log(string(cipher.Decrypt(ciphertext)))
 	})
 
 	// https://cryptopals.com/sets/1/challenges/7

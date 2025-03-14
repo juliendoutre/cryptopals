@@ -2,7 +2,6 @@ package cryptopals
 
 import (
 	"crypto/aes"
-	"math"
 )
 
 type Cipher interface {
@@ -28,21 +27,21 @@ func (s SingleByteXor) Decrypt(ciphertext []byte) []byte {
 	return s.Encrypt(ciphertext)
 }
 
-func (s SingleByteXor) Crack(ciphertext []byte) (byte, []byte, bool) {
-	for candidate := range math.MaxUint8 {
-		s.Key = byte(candidate)
+var _ Cipher = SingleByteXor{}
 
-		plaintext := s.Decrypt(ciphertext)
+func CrackSingleByteXor(ciphertext []byte) SingleByteXor {
+	bestCandidate, bestScore := 0, 0.
 
-		if IsEnglish(plaintext) {
-			return s.Key, plaintext, true
+	for candidate := range 256 {
+		score := EnglishScore(SingleByteXor{Key: byte(candidate)}.Decrypt(ciphertext))
+		if score > bestScore {
+			bestCandidate = candidate
+			bestScore = score
 		}
 	}
 
-	return 0, nil, false
+	return SingleByteXor{Key: byte(bestCandidate)}
 }
-
-var _ Cipher = SingleByteXor{}
 
 type RepeatingKeyXor struct {
 	Key []byte
@@ -68,49 +67,51 @@ func (r RepeatingKeyXor) Decrypt(ciphertext []byte) []byte {
 
 var _ Cipher = RepeatingKeyXor{}
 
-func (r RepeatingKeyXor) Crack(ciphertext []byte) ([]byte, []byte, bool) {
-	keySize := r.guessKeySize(2, 40, ciphertext)
+func CrackRepeatingKeyXor(ciphertext []byte) RepeatingKeyXor {
+	keySize := guessKeySize(2, 40, ciphertext)
 
 	key := make([]byte, keySize)
 
 	for i := range keySize {
-		keyByte, _, isCracked := SingleByteXor{}.Crack(transposeBlock(ciphertext, keySize, i))
-		if !isCracked {
-			return nil, nil, false
-		}
-
+		keyByte := CrackSingleByteXor(transposeBlock(ciphertext, keySize, i)).Key
 		key[i] = keyByte
 	}
 
-	// TODO: return plaintext
-
-	return key, nil, true
+	return RepeatingKeyXor{Key: key}
 }
 
 func transposeBlock(ciphertext []byte, blockSize, index int) []byte {
-	block := make([]byte, len(ciphertext)/blockSize)
+	if blockSize == 0 {
+		return []byte{}
+	}
 
-	for j := range len(ciphertext) / blockSize {
+	N := len(ciphertext) / blockSize
+
+	block := make([]byte, N)
+
+	for j := range N {
 		block[j] = ciphertext[blockSize*j+index]
 	}
 
-	// TODO: add final block
+	if N*blockSize+index < len(ciphertext) {
+		block = append(block, ciphertext[N*blockSize+index]) //nolint:makezero
+	}
 
 	return block
 }
 
-func (r RepeatingKeyXor) guessKeySize(minKeySize, maxKeySize int, ciphertext []byte) int {
+func guessKeySize(minKeySize, maxKeySize int, ciphertext []byte) int {
 	guess := minKeySize
-	guessDistance := float64(8)
+	guessDistance := 8.
 
 	for keySize := minKeySize; keySize < maxKeySize; keySize++ {
-		block1 := ciphertext[0:keySize]
-		block2 := ciphertext[keySize : 2*keySize]
-		block3 := ciphertext[2*keySize : 3*keySize]
-		block4 := ciphertext[3*keySize : 4*keySize]
+		distance := 0.
 
-		distance := float64(HammingDistance(block1, block2) + HammingDistance(block1, block3) + HammingDistance(block1, block4))
-		distance /= 3 * float64(keySize)
+		for i := 1; i < len(ciphertext)/keySize-1; i++ {
+			distance += float64(HammingDistance(ciphertext[:keySize], ciphertext[i*keySize:(i+1)*keySize]))
+		}
+
+		distance /= (float64(len(ciphertext)/keySize-2) * float64(keySize))
 
 		if distance < guessDistance {
 			guess = keySize
