@@ -1,6 +1,7 @@
 package cryptopals
 
 import (
+	"bytes"
 	"crypto/aes"
 )
 
@@ -151,3 +152,45 @@ func (a AES128ECB) Decrypt(ciphertext []byte) []byte {
 }
 
 var _ Cipher = AES128ECB{}
+
+type AES128CBC struct {
+	Key [16]byte
+	IV  [16]byte
+}
+
+func (a AES128CBC) Encrypt(plaintext []byte) []byte {
+	cipher, _ := aes.NewCipher(a.Key[:])
+
+	ciphertext := make([]byte, len(plaintext))
+
+	previousBlock := bytes.Clone(a.IV[:])
+
+	for i := range len(plaintext) / len(a.Key) {
+		cipher.Encrypt(ciphertext[i*len(a.Key):(i+1)*len(a.Key)], Xor(previousBlock, plaintext[i*len(a.Key):(i+1)*len(a.Key)]))
+		previousBlock = ciphertext[i*len(a.Key) : (i+1)*len(a.Key)]
+	}
+
+	return ciphertext
+}
+
+func (a AES128CBC) Decrypt(ciphertext []byte) []byte {
+	cipher, _ := aes.NewCipher(a.Key[:])
+
+	plaintext := make([]byte, 0, len(ciphertext))
+
+	previousBlock := bytes.Clone(a.IV[:])
+
+	for i := range len(ciphertext) / len(a.Key) {
+		tmpBuffer := make([]byte, 16)
+
+		cipher.Decrypt(tmpBuffer, ciphertext[i*len(a.Key):(i+1)*len(a.Key)])
+
+		plaintext = append(plaintext, Xor(previousBlock, tmpBuffer)...)
+
+		previousBlock = ciphertext[i*len(a.Key) : (i+1)*len(a.Key)]
+	}
+
+	return plaintext
+}
+
+var _ Cipher = AES128CBC{}

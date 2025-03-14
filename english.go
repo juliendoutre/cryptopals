@@ -13,6 +13,5 @@ func EnglishScore(input []byte) float64 {
 		}
 	}
 
-	// Normalize the score
 	return score / float64(len(input))
 }

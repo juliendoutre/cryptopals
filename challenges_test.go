@@ -24,6 +24,9 @@ var data7 string
 //go:embed data/8.txt
 var data8 string
 
+//go:embed data/10.txt
+var data10 string
+
 // https://cryptopals.com/sets/1
 func TestSet1(t *testing.T) {
 	t.Parallel()
@@ -180,5 +183,20 @@ func TestSet2(t *testing.T) {
 		t.Parallel()
 
 		assert.Equal(t, []byte("YELLOW SUBMARINE\x04\x04\x04\x04"), cryptopals.PKCS7{Length: 20}.Pad([]byte("YELLOW SUBMARINE")))
+	})
+
+	// https://cryptopals.com/sets/2/challenges/10
+	t.Run("challenge 10", func(t *testing.T) {
+		t.Parallel()
+
+		ciphertext, err := base64.StdEncoding.DecodeString(data10)
+		require.NoError(t, err)
+
+		cipher := cryptopals.AES128CBC{
+			Key: [16]byte([]byte("YELLOW SUBMARINE")),
+			IV:  [16]byte{},
+		}
+
+		t.Log(string(cipher.Decrypt(ciphertext)))
 	})
 }
