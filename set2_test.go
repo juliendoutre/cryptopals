@@ -42,13 +42,13 @@ func TestSet2(t *testing.T) {
 		padding := cryptopals.PKCS7{Length: 16}
 
 		unpaddedText, err := padding.Unpad([]byte("ICE ICE BABY\x04\x04\x04\x04"))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "ICE ICE BABY", string(unpaddedText))
 
 		_, err = padding.Unpad([]byte("ICE ICE BABY\x05\x05\x05\x05"))
-		assert.Error(t, err)
+		require.Error(t, err)
 
 		_, err = padding.Unpad([]byte("ICE ICE BABY\x01\x02\x03\x04"))
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }

@@ -10,6 +10,8 @@ linters:
     - funlen
     - cyclop
     - gocognit
+    - err113
+    - dupword
 linters-settings:
   depguard:
     rules:

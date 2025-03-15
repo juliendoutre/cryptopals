@@ -1,6 +1,8 @@
 package cryptopals
 
-import "fmt"
+import (
+	"errors"
+)
 
 type Padding interface {
 	Pad(text []byte) []byte
@@ -35,14 +37,14 @@ func (p PKCS7) Unpad(text []byte) ([]byte, error) {
 	}
 
 	if len(text)%int(p.Length) != 0 {
-		return nil, fmt.Errorf("invalid padded text length")
+		return nil, errors.New("invalid padded text length")
 	}
 
 	paddingByte := text[len(text)-1]
 
 	for i := 1; i <= int(paddingByte); i++ {
 		if text[len(text)-i] != paddingByte {
-			return nil, fmt.Errorf("invalid padding sequence")
+			return nil, errors.New("invalid padding sequence")
 		}
 	}
 

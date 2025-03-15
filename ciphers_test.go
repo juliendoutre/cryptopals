@@ -43,6 +43,7 @@ func TestAES128ECB(t *testing.T) {
 
 	f := func(plaintext []byte, key [16]byte) bool {
 		cipher := cryptopals.AES128ECB{Key: key}
+
 		actualPlaintext, err := padding.Unpad(cipher.Decrypt(cipher.Encrypt(padding.Pad(plaintext))))
 		if err != nil {
 			return false
