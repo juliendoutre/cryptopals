@@ -13,8 +13,14 @@ func TestPKCS7(t *testing.T) {
 
 	f := func(length byte, text []byte) bool {
 		padding := cryptopals.PKCS7{Length: length}
+		paddedText := padding.Pad(text)
 
-		return bytes.Equal(text, padding.Unpad(padding.Pad(text)))
+		unpaddedText, err := padding.Unpad(paddedText)
+		if err != nil {
+			return false
+		}
+
+		return bytes.Equal(text, unpaddedText)
 	}
 
 	if err := quick.Check(f, &quick.Config{}); err != nil {

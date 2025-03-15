@@ -1,6 +1,9 @@
 package cryptopals
 
-import "math/bits"
+import (
+	"crypto/rand"
+	"math/bits"
+)
 
 func Xor(a, b []byte) []byte {
 	out := make([]byte, len(a))
@@ -20,4 +23,11 @@ func HammingDistance(a, b []byte) int {
 	}
 
 	return count
+}
+
+func Random128BitsKey() [16]byte {
+	key := [16]byte{}
+	rand.Read(key[:]) //nolint:errcheck
+
+	return key
 }

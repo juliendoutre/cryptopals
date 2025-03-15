@@ -1,8 +1,10 @@
 package cryptopals
 
+import "fmt"
+
 type Padding interface {
 	Pad(text []byte) []byte
-	Unpad(text []byte) []byte
+	Unpad(text []byte) ([]byte, error)
 }
 
 type PKCS7 struct {
@@ -31,24 +33,20 @@ func (p PKCS7) Pad(text []byte) []byte {
 	return paddedText
 }
 
-func (p PKCS7) Unpad(text []byte) []byte {
-	if p.Length == 0 {
-		return text
-	}
-
-	if len(text) < int(p.Length) {
-		return text
+func (p PKCS7) Unpad(text []byte) ([]byte, error) {
+	if p.Length == 0 || len(text) == 0 {
+		return text, nil
 	}
 
 	paddingByte := text[len(text)-1]
 
-	for i := 1; i < int(paddingByte); i++ {
+	for i := 1; i <= int(paddingByte); i++ {
 		if text[len(text)-i] != paddingByte {
-			return text
+			return nil, fmt.Errorf("invalid padding sequence")
 		}
 	}
 
-	return text[:len(text)-int(paddingByte)]
+	return text[:len(text)-int(paddingByte)], nil
 }
 
 var _ Padding = PKCS7{}

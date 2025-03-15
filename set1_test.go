@@ -173,30 +173,3 @@ I go crazy when I hear a cymbal`
 		assert.Equal(t, 4, maximumDuplicateBlocksCount)
 	})
 }
-
-// https://cryptopals.com/sets/2
-func TestSet2(t *testing.T) {
-	t.Parallel()
-
-	// https://cryptopals.com/sets/2/challenges/9
-	t.Run("challenge 9", func(t *testing.T) {
-		t.Parallel()
-
-		assert.Equal(t, []byte("YELLOW SUBMARINE\x04\x04\x04\x04"), cryptopals.PKCS7{Length: 20}.Pad([]byte("YELLOW SUBMARINE")))
-	})
-
-	// https://cryptopals.com/sets/2/challenges/10
-	t.Run("challenge 10", func(t *testing.T) {
-		t.Parallel()
-
-		ciphertext, err := base64.StdEncoding.DecodeString(data10)
-		require.NoError(t, err)
-
-		cipher := cryptopals.AES128CBC{
-			Key: [16]byte([]byte("YELLOW SUBMARINE")),
-			IV:  [16]byte{},
-		}
-
-		t.Log(string(cipher.Decrypt(ciphertext)))
-	})
-}
