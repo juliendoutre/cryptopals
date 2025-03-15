@@ -39,7 +39,7 @@ func TestSet2(t *testing.T) {
 	t.Run("challenge 15", func(t *testing.T) {
 		t.Parallel()
 
-		padding := cryptopals.PKCS7{Length: 20}
+		padding := cryptopals.PKCS7{Length: 16}
 
 		unpaddedText, err := padding.Unpad([]byte("ICE ICE BABY\x04\x04\x04\x04"))
 		assert.NoError(t, err)

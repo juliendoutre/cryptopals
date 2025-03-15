@@ -18,10 +18,6 @@ func (p PKCS7) Pad(text []byte) []byte {
 
 	remainder := len(text) % int(p.Length)
 
-	if remainder == 0 {
-		return text
-	}
-
 	suffixLength := int(p.Length) - remainder
 
 	paddedText := text
@@ -36,6 +32,10 @@ func (p PKCS7) Pad(text []byte) []byte {
 func (p PKCS7) Unpad(text []byte) ([]byte, error) {
 	if p.Length == 0 || len(text) == 0 {
 		return text, nil
+	}
+
+	if len(text)%int(p.Length) != 0 {
+		return nil, fmt.Errorf("invalid padded text length")
 	}
 
 	paddingByte := text[len(text)-1]
