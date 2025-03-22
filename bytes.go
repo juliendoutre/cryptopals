@@ -6,6 +6,16 @@ import (
 	"math/bits"
 )
 
+func SingleCharBlock(char byte, length int) []byte {
+	bytes := make([]byte, 0, length)
+
+	for range length {
+		bytes = append(bytes, char)
+	}
+
+	return bytes
+}
+
 func Xor(a, b []byte) []byte {
 	out := make([]byte, len(a))
 

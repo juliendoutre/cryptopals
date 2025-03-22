@@ -42,15 +42,32 @@ func TestSet2(t *testing.T) {
 
 		for range 100 {
 			key := cryptopals.Random128Bits()
-			cipher, isECB := randomCipher(key)
+			innerCipher, isECB := randomCipher(key)
+			cipher := challenge11Cipher{
+				inner:   innerCipher,
+				padding: cryptopals.PKCS7{Length: 16},
+			}
 
-			assert.Equal(t, isECB, cryptopals.Oracle{}.IsECB(cipher))
+			assert.Equal(t, isECB, cryptopals.IsECB(cipher))
 		}
 	})
 
 	// https://cryptopals.com/sets/2/challenges/12
 	t.Run("challenge 12", func(t *testing.T) {
 		t.Parallel()
+
+		suffix, err := base64.StdEncoding.DecodeString("Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK")
+		require.NoError(t, err)
+
+		cipher := challenge12Cipher{
+			inner:   cryptopals.AES128ECB{Key: cryptopals.Random128Bits()},
+			padding: cryptopals.PKCS7{Length: 16},
+			suffix:  suffix,
+		}
+
+		blockSize := cryptopals.GuessBlockSize(cipher)
+		assert.Equal(t, 16, blockSize)
+		assert.Equal(t, true, cryptopals.IsECB(cipher))
 	})
 
 	// https://cryptopals.com/sets/2/challenges/15
@@ -81,4 +98,34 @@ func randomCipher(key [16]byte) (cryptopals.Cipher, bool) {
 		Key: key,
 		IV:  cryptopals.Random128Bits(),
 	}, false
+}
+
+type challenge11Cipher struct {
+	inner   cryptopals.Cipher
+	padding cryptopals.PKCS7
+}
+
+func (c challenge11Cipher) Encrypt(plaintext []byte) []byte {
+	plaintext = append(cryptopals.RandomBytes(5, 11), plaintext...)
+	plaintext = append(plaintext, cryptopals.RandomBytes(5, 11)...)
+
+	return c.inner.Encrypt(c.padding.Pad(plaintext))
+}
+
+func (c challenge11Cipher) Decrypt(ciphertext []byte) []byte {
+	return c.inner.Decrypt(ciphertext)
+}
+
+type challenge12Cipher struct {
+	inner   cryptopals.AES128ECB
+	padding cryptopals.PKCS7
+	suffix  []byte
+}
+
+func (c challenge12Cipher) Encrypt(plaintext []byte) []byte {
+	return c.inner.Encrypt(c.padding.Pad(append(plaintext, c.suffix...)))
+}
+
+func (c challenge12Cipher) Decrypt(ciphertext []byte) []byte {
+	return c.inner.Decrypt(ciphertext)
 }
