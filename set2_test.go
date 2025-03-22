@@ -67,7 +67,29 @@ func TestSet2(t *testing.T) {
 
 		blockSize := cryptopals.GuessBlockSize(cipher)
 		assert.Equal(t, 16, blockSize)
-		assert.Equal(t, true, cryptopals.IsECB(cipher))
+		assert.True(t, cryptopals.IsECB(cipher))
+
+		plaintext := make([]byte, 0, len(suffix))
+
+		for cursor := range suffix {
+			base := cryptopals.SingleCharBlock('A', 15-(cursor%16))
+
+			possibilities := make(map[string]byte, 256)
+
+			for char := range 256 {
+				testPlaintext := append(base, plaintext...) //nolint:gocritic
+				testPlaintext = append(testPlaintext, byte(char))
+				possibilities[string(cipher.Encrypt(testPlaintext)[(cursor/16)*16:(cursor/16+1)*16])] = byte(char)
+			}
+
+			plaintext = append(plaintext, possibilities[string(cipher.Encrypt(base)[(cursor/16)*16:(cursor/16+1)*16])])
+		}
+
+		assert.Equal(t, `Rollin' in my 5.0
+With my rag-top down so my hair can blow
+The girlies on standby waving just to say hi
+Did you stop? No, I just drove by
+`, string(plaintext))
 	})
 
 	// https://cryptopals.com/sets/2/challenges/15
