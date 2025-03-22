@@ -1,7 +1,6 @@
 package cryptopals_test
 
 import (
-	"bytes"
 	"encoding/base64"
 	"testing"
 
@@ -45,13 +44,7 @@ func TestSet2(t *testing.T) {
 			key := cryptopals.Random128Bits()
 			cipher, isECB := randomCipher(key)
 
-			plaintext := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-			plaintext = append(cryptopals.RandomBytes(5, 11), plaintext...)
-			plaintext = append(plaintext, cryptopals.RandomBytes(5, 11)...)
-
-			ciphertext := cipher.Encrypt(plaintext)
-
-			assert.Equal(t, isECB, bytes.Equal(ciphertext[16:32], ciphertext[32:48]))
+			assert.Equal(t, isECB, cryptopals.Oracle{}.IsECB(cipher))
 		}
 	})
 
