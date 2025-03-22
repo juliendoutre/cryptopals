@@ -2,6 +2,8 @@ package cryptopals_test
 
 import (
 	"encoding/base64"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/juliendoutre/cryptopals"
@@ -48,7 +50,7 @@ func TestSet2(t *testing.T) {
 				padding: cryptopals.PKCS7{Length: 16},
 			}
 
-			assert.Equal(t, isECB, cryptopals.IsECB(cipher))
+			assert.Equal(t, isECB, cryptopals.IsECB(cipher, 16))
 		}
 	})
 
@@ -67,7 +69,7 @@ func TestSet2(t *testing.T) {
 
 		blockSize := cryptopals.GuessBlockSize(cipher)
 		assert.Equal(t, 16, blockSize)
-		assert.True(t, cryptopals.IsECB(cipher))
+		assert.True(t, cryptopals.IsECB(cipher, blockSize))
 
 		plaintext := make([]byte, 0, len(suffix))
 
@@ -90,6 +92,18 @@ With my rag-top down so my hair can blow
 The girlies on standby waving just to say hi
 Did you stop? No, I just drove by
 `, string(plaintext))
+	})
+
+	// https://cryptopals.com/sets/2/challenges/13
+	t.Run("challenge 13", func(t *testing.T) {
+		t.Parallel()
+
+		assert.Equal(t, "email=foo@bar.com&uid=10&role=user", profileFor("foo@bar.com"))
+
+		cipher := cryptopals.AES128ECB{Key: cryptopals.Random128Bits()}
+
+		ciphertext := cipher.Encrypt([]byte(profileFor("foo@bar.com")))
+		t.Log(ciphertext)
 	})
 
 	// https://cryptopals.com/sets/2/challenges/15
@@ -150,4 +164,11 @@ func (c challenge12Cipher) Encrypt(plaintext []byte) []byte {
 
 func (c challenge12Cipher) Decrypt(ciphertext []byte) []byte {
 	return c.inner.Decrypt(ciphertext)
+}
+
+func profileFor(email string) string {
+	escapedEmail := strings.ReplaceAll(email, "=", "")
+	escapedEmail = strings.ReplaceAll(escapedEmail, "&", "")
+
+	return fmt.Sprintf("email=%s&uid=10&role=user", escapedEmail)
 }

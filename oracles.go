@@ -2,11 +2,11 @@ package cryptopals
 
 import "bytes"
 
-func IsECB(cipher Cipher) bool {
-	plaintext := SingleCharBlock('A', 16*3)
+func IsECB(cipher Cipher, blockSize int) bool {
+	plaintext := SingleCharBlock('A', blockSize*3)
 	ciphertext := cipher.Encrypt(plaintext)
 
-	return bytes.Equal(ciphertext[16:32], ciphertext[32:48])
+	return bytes.Equal(ciphertext[blockSize:2*blockSize], ciphertext[2*blockSize:3*blockSize])
 }
 
 func GuessBlockSize(cipher Cipher) int {
