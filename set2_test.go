@@ -1,6 +1,7 @@
 package cryptopals_test
 
 import (
+	"bytes"
 	"encoding/base64"
 	"testing"
 
@@ -36,6 +37,30 @@ func TestSet2(t *testing.T) {
 		t.Log(string(cipher.Decrypt(ciphertext)))
 	})
 
+	// https://cryptopals.com/sets/2/challenges/11
+	t.Run("challenge 11", func(t *testing.T) {
+		t.Parallel()
+
+		for range 100 {
+			key := cryptopals.Random128Bits()
+			cipher, isECB := randomCipher(key)
+
+			plaintext := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+			plaintext = append(cryptopals.RandomBytes(5, 11), plaintext...)
+			plaintext = append(plaintext, cryptopals.RandomBytes(5, 11)...)
+
+			ciphertext := cipher.Encrypt(plaintext)
+
+			assert.Equal(t, isECB, bytes.Equal(ciphertext[16:32], ciphertext[32:48]))
+		}
+	})
+
+	// https://cryptopals.com/sets/2/challenges/12
+	t.Run("challenge 12", func(t *testing.T) {
+		t.Parallel()
+	})
+
+	// https://cryptopals.com/sets/2/challenges/15
 	t.Run("challenge 15", func(t *testing.T) {
 		t.Parallel()
 
@@ -51,4 +76,16 @@ func TestSet2(t *testing.T) {
 		_, err = padding.Unpad([]byte("ICE ICE BABY\x01\x02\x03\x04"))
 		require.Error(t, err)
 	})
+}
+
+//nolint:ireturn
+func randomCipher(key [16]byte) (cryptopals.Cipher, bool) {
+	if cryptopals.RandomBool() {
+		return cryptopals.AES128ECB{Key: key}, true
+	}
+
+	return cryptopals.AES128CBC{
+		Key: key,
+		IV:  cryptopals.Random128Bits(),
+	}, false
 }
