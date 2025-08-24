@@ -103,7 +103,6 @@ Did you stop? No, I just drove by
 		cipher := cryptopals.AES128ECB{Key: cryptopals.Random128Bits()}
 
 		ciphertext := cipher.Encrypt([]byte(profileFor("foo@bar.com")))
-		t.Log(ciphertext)
 	})
 
 	// https://cryptopals.com/sets/2/challenges/15
